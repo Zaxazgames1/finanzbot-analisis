@@ -335,6 +335,28 @@ st.markdown("""
         padding: 15px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+    
+    /* Menú de ayuda */
+    .help-menu {
+        background-color: #F0F9F6;
+        border: 1px solid #10A37F;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .help-item {
+        padding: 8px 12px;
+        margin: 5px 0;
+        background-color: #E6F7F1;
+        border-radius: 5px;
+        transition: all 0.2s ease;
+    }
+    
+    .help-item:hover {
+        background-color: #D1F0E6;
+        transform: translateX(5px);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -395,6 +417,134 @@ def validar_numeros(valor, min_valor=0.0, nombre="valor"):
     except ValueError:
         return False, f"El {nombre} debe ser un número válido."
 
+# Función para detectar si un mensaje está fuera del ámbito financiero
+def es_mensaje_no_financiero(mensaje):
+    """
+    Detecta si un mensaje está fuera del ámbito financiero.
+    
+    Args:
+        mensaje (str): Mensaje del usuario
+        
+    Returns:
+        bool: True si el mensaje no es financiero, False si es financiero
+    """
+    # Palabras clave de saludos comunes
+    saludos = ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'saludos', 'qué tal', 'como estas', 'cómo estás', 'como vas', 'qué hay']
+    
+    # Palabras clave de despedidas
+    despedidas = ['adiós', 'chao', 'hasta luego', 'nos vemos', 'bye', 'hasta pronto', 'hasta mañana']
+    
+    # Palabras clave sobre estados emocionales
+    emociones = ['triste', 'feliz', 'deprimido', 'ansioso', 'estresado', 'cansado', 'aburrido', 'mal', 'bien', 'enfermo']
+    
+    # Palabras clave sobre temas personales
+    temas_personales = ['salud', 'vida', 'familia', 'amigo', 'amor', 'relación', 'matrimonio', 'hijo', 'niño', 'mascota']
+    
+    # Peticiones de ayuda generales
+    ayuda_general = ['ayuda', 'ayúdame', 'socorro', 'sos', 'help']
+    
+    # Verificar si el mensaje coincide con alguna categoría
+    mensaje_lower = mensaje.lower()
+    
+    # Detectar saludos simples
+    if any(saludo == mensaje_lower for saludo in saludos):
+        return True, "saludo"
+    
+    # Detectar despedidas simples
+    if any(despedida == mensaje_lower for despedida in despedidas):
+        return True, "despedida"
+        
+    # Detectar si es una petición de ayuda general
+    if any(ayuda == mensaje_lower for ayuda in ayuda_general):
+        return True, "ayuda"
+    
+    # Detectar emociones o temas personales
+    if any(emocion in mensaje_lower for emocion in emociones):
+        return True, "emocion"
+    
+    if any(tema in mensaje_lower for tema in temas_personales):
+        return True, "personal"
+    
+    # Detectar mensajes muy cortos o sin palabras clave financieras
+    if len(mensaje_lower.split()) < 2:
+        # Puede ser una respuesta corta no financiera
+        return True, "corto"
+    
+    # Palabras clave financieras para verificar si es un mensaje financiero
+    palabras_financieras = [
+        'finanza', 'empresa', 'dinero', 'capital', 'beneficio', 'ganancia', 'activo', 'pasivo', 
+        'deuda', 'préstamo', 'inversion', 'cartera', 'crédito', 'liquidez', 'rentabilidad', 
+        'margen', 'impuesto', 'pago', 'cobro', 'factura', 'balance', 'contabilidad', 'inventario',
+        'flujo', 'costo', 'ingreso', 'gasto', 'ratio', 'indicador', 'estado', 'análisis',
+        'endeudamiento', 'productividad', 'rotación'
+    ]
+    
+    # Si contiene alguna palabra financiera, considerarlo como mensaje financiero
+    if any(palabra in mensaje_lower for palabra in palabras_financieras):
+        return False, "financiero"
+    
+    # Por defecto, considerar como no financiero
+    return True, "otro"
+
+# Función para responder a mensajes no financieros
+def responder_mensaje_no_financiero(tipo):
+    """
+    Genera respuestas para mensajes que no son de índole financiera.
+    
+    Args:
+        tipo (str): Tipo de mensaje no financiero
+        
+    Returns:
+        str: Respuesta apropiada
+    """
+    if tipo == "saludo":
+        saludos = [
+            "👋 ¡Hola! Soy FinanzGPT, tu asistente financiero empresarial. ¿En qué puedo ayudarte hoy con respecto a tus finanzas?",
+            "¡Hola! Estoy aquí para ayudarte con el análisis financiero de tu empresa. ¿Qué te gustaría saber?",
+            "¡Saludos! Soy tu asistente especializado en análisis financiero empresarial. ¿Tienes alguna consulta sobre tus indicadores financieros?"
+        ]
+        return random.choice(saludos)
+    
+    elif tipo == "despedida":
+        despedidas = [
+            "¡Hasta pronto! Recuerda revisar periódicamente tus indicadores financieros para mantener el control de tu empresa.",
+            "¡Adiós! Si tienes más preguntas sobre finanzas empresariales en el futuro, estaré aquí para ayudarte.",
+            "¡Que tengas un buen día! Estaré disponible cuando necesites más análisis financieros para tu empresa."
+        ]
+        return random.choice(despedidas)
+    
+    elif tipo == "emocion" or tipo == "personal":
+        respuestas = [
+            "Como asistente financiero, estoy diseñado para ayudarte con indicadores y análisis económicos de tu empresa. ¿Te gustaría que analizáramos algún aspecto financiero específico?",
+            "Mi especialidad es el análisis financiero empresarial. ¿Puedo ayudarte con alguna consulta sobre tus indicadores económicos?",
+            "Estoy programado para asistirte en temas financieros empresariales. ¿Hay algún aspecto financiero de tu empresa sobre el que quieras información?"
+        ]
+        return random.choice(respuestas)
+    
+    elif tipo == "ayuda":
+        # Mostrar menú de opciones de ayuda
+        respuesta = """### 🔍 ¿En qué puedo ayudarte?
+
+Soy FinanzGPT, tu asistente especializado en análisis financiero empresarial. Puedo ayudarte con:
+
+1. **Análisis de endeudamiento**: Evaluación de tu ratio de deuda y recomendaciones para optimizarlo
+2. **Análisis de rentabilidad**: Evaluación de tu ROA y estrategias para mejorar tus beneficios
+3. **Análisis de productividad**: Evaluación del rendimiento por empleado y consejos para aumentarlo
+4. **Análisis de rotación de cartera**: Evaluación de tu ciclo de cobro y métodos para acelerarlo
+5. **Análisis de liquidez**: Evaluación de tu capacidad para cubrir obligaciones a corto plazo
+6. **Resumen general financiero**: Visión global de todos tus indicadores financieros
+
+Para consultar, simplemente pregunta por ejemplo: *"¿Cómo está mi endeudamiento?"* o *"¿Qué puedo hacer para mejorar mi rentabilidad?"*"""
+        return respuesta
+    
+    elif tipo == "corto" or tipo == "otro":
+        respuestas = [
+            "Soy un asistente especializado en análisis financiero empresarial. ¿Puedo ayudarte con alguna consulta sobre indicadores financieros de tu empresa?",
+            "Estoy aquí para ayudarte con análisis económico y financiero. ¿Qué indicador financiero te gustaría analizar?",
+            "Como asistente financiero, puedo ayudarte a interpretar tus indicadores y darte recomendaciones para mejorar la salud económica de tu empresa. ¿Qué aspecto te interesa analizar?"
+        ]
+        return random.choice(respuestas)
+
 # Función mejorada para respuestas del chatbot estilo ChatGPT
 def chatbot_response(mensaje, datos_empresa=None):
     """
@@ -407,6 +557,13 @@ def chatbot_response(mensaje, datos_empresa=None):
     Returns:
         str: Respuesta del chatbot
     """
+    # Verificar si es un mensaje no financiero
+    es_no_financiero, tipo = es_mensaje_no_financiero(mensaje)
+    
+    if es_no_financiero:
+        return responder_mensaje_no_financiero(tipo)
+    
+    # Si el mensaje es financiero, continuar con el análisis normal
     # Aplicar NLP al mensaje
     tokens = tokenizar_texto(mensaje)
     lemas = lematizar_texto(mensaje)
@@ -472,7 +629,7 @@ def chatbot_response(mensaje, datos_empresa=None):
         categoria = 'despedida'
     elif any(palabra in mensaje.lower() for palabra in ['deuda', 'endeudamiento', 'pasivo', 'prestamo', 'financiacion', 'apalancamiento']):
         categoria = 'endeudamiento'
-    elif any(palabra in mensaje.lower() for palabra in ['rentabilidad', 'ganancia', 'beneficio', 'rendimiento', 'roa', 'margen', 'utilidad']):
+    elif any(palabra in mensaje.lower() for palabra in ['rentabilidad', 'ganancia', 'beneficio', 'rendimiento', 'roa', 'margen','utilidad']):
         categoria = 'rentabilidad'
     elif any(palabra in mensaje.lower() for palabra in ['productividad', 'eficiencia', 'empleado', 'trabajador', 'personal', 'rendimiento']):
         categoria = 'productividad'
@@ -733,7 +890,7 @@ def chatbot_response(mensaje, datos_empresa=None):
                 
             return respuesta
     
-    # General: respuesta basada en análisis de texto
+    # Si no hay datos de empresa o la consulta es general
     # Usar POS tagging para identificar verbos y sustantivos clave
     verbos = [word for word, tag in pos_tags if tag == 'VERB']
     sustantivos = [word for word, tag in pos_tags if tag in ['NOUN', 'PROPN']]
@@ -746,7 +903,7 @@ def chatbot_response(mensaje, datos_empresa=None):
         respuesta += random.choice(mensajes_predefinidos[categoria])
         return respuesta
     
-    # Si no hay suficiente contexto para personalizar
+    # Si no hay suficiente contexto para personalizar, usar respuesta predefinida
     return random.choice(mensajes_predefinidos[categoria])
 
 # Variables para almacenar datos de la empresa y resultados
@@ -893,6 +1050,7 @@ if st.session_state.page_view == "welcome":
         - "¿Qué puedo hacer para mejorar la productividad?"
         - "¿Cómo optimizar mi rotación de cartera?"
         - "Dame un resumen general de mi empresa"
+        - "Ayuda" (para ver un menú de opciones)
         """)
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -914,6 +1072,7 @@ elif st.session_state.page_view == "chat":
             <div style="text-align: center; margin: 50px 0; color: #888;">
                 <p>👋 ¡Hola! Soy FinanzGPT, tu asistente financiero.</p>
                 <p>Puedes preguntarme sobre indicadores financieros, recomendaciones para tu empresa, o cualquier duda sobre análisis económico.</p>
+                <p>Escribe "ayuda" si necesitas ver un menú de opciones.</p>
             </div>
             """, unsafe_allow_html=True)
         
